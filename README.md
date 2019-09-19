@@ -20,4 +20,4 @@ Options:
 ```
 
 ## Examples:
-![example1](./examples/example1.gif)
+[![asciicast](https://asciinema.org/a/kwe8QQdnDBIY1m3Gy0GPDArSa.svg)](https://asciinema.org/a/kwe8QQdnDBIY1m3Gy0GPDArSa)
