@@ -1,4 +1,3 @@
 import 'source-map-support/register';
-import half from './half';
 
-export default half;
+export { default } from './page-loader';
