@@ -23,6 +23,7 @@ program
         log(`page downloaded to ${downloadedPagePath}`);
       })
       .catch(() => {
+        killSpinner();
         log('Something went wrong, try again.');
       });
   });
