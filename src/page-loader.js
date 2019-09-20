@@ -5,11 +5,10 @@ import { pageUrlToFileName } from './utils';
 
 const { promises: pfs } = fs;
 
-function pageLoader(pageUrl, { output: outputDir }) {
+function pageLoader(pageUrl, options = {}) {
+  const { output: outputDir } = options;
   const outputFileName = pageUrlToFileName(pageUrl);
   const outputFilePath = path.resolve(outputDir, outputFileName);
-
-  console.log('outputDir', outputDir);
 
   return axios
     .get(pageUrl)
