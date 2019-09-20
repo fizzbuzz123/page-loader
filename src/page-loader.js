@@ -9,6 +9,8 @@ function pageLoader(pageUrl, { output: outputDir }) {
   const outputFileName = pageUrlToFileName(pageUrl);
   const outputFilePath = path.resolve(outputDir, outputFileName);
 
+  console.log('outputDir', outputDir);
+
   return axios
     .get(pageUrl)
     .then((response) => response.data)

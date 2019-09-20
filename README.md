@@ -21,3 +21,8 @@ Options:
 
 ## Examples:
 [![asciicast](https://asciinema.org/a/kwe8QQdnDBIY1m3Gy0GPDArSa.svg)](https://asciinema.org/a/kwe8QQdnDBIY1m3Gy0GPDArSa)
+
+or
+
+[![asciicast](https://asciinema.org/a/wa5gqAQaOJ3Vqp2xHpRtYvMwH.svg)](https://asciinema.org/a/wa5gqAQaOJ3Vqp2xHpRtYvMwH)
+
