@@ -20,7 +20,7 @@ Options:
 ```
 
 ## Examples:
-[![asciicast](https://asciinema.org/a/kwe8QQdnDBIY1m3Gy0GPDArSa.svg)](https://asciinema.org/a/kwe8QQdnDBIY1m3Gy0GPDArSa)
+[![asciicast](https://asciinema.org/a/OcWc6Izo5CKz0F27mWjd2pyLv.svg)](https://asciinema.org/a/OcWc6Izo5CKz0F27mWjd2pyLv)
 
 or
 
