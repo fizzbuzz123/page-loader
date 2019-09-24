@@ -5,51 +5,69 @@ import nock from 'nock';
 import path from 'path';
 import os from 'os';
 import pageLoader from '../src';
-import { pageUrlToFileName } from '../src/utils';
+import {
+  makeHtmlFilePath, makeResourcesFolderPath, makeResourcePath,
+} from '../src/utils';
 
 const host = 'http://localhost';
 
 axios.defaults.host = host;
 axios.defaults.adapter = httpAdapter;
 
+const expectedHtmlFilePath = path.resolve(__dirname, 'replies/test-site.html');
+const pageUrl = '/test-site';
+
 const { promises: pfs } = fs;
 
 const tmpDir = os.tmpdir();
 
 describe('Page loader', () => {
-  const expectedFilePath = path.resolve(__dirname, 'replies/simple-page.html');
-  const pageUrl = '/simple-page';
-
   beforeEach(() => {
     nock(host)
       .get(pageUrl)
-      .replyWithFile(200, expectedFilePath, {
+      .replyWithFile(200, expectedHtmlFilePath, {
         'Content-Type': 'text/html',
       });
   });
 
-  test('should save a page', async () => {
-    const expectedFileContent = await pfs.readFile(expectedFilePath, 'utf-8');
+  test('should download html', async () => {
     const outputDir = await pfs.mkdtemp(`${tmpDir}${path.sep}`);
     await pageLoader(pageUrl, { output: outputDir });
 
-    const createdFilePath = path.resolve(outputDir, pageUrlToFileName(pageUrl));
+    const expectedFileContent = await pfs.readFile(expectedHtmlFilePath, 'utf-8');
+
+    const createdFilePath = makeHtmlFilePath(pageUrl, outputDir);
     const createdFileContent = await pfs.readFile(createdFilePath, 'utf-8');
 
     expect(createdFileContent).toEqual(expectedFileContent);
   });
 
-  test('should throw fs error', async () => {
-    const outputDir = 'non-existent-directory';
-    const outputFilePath = path.resolve(outputDir, pageUrlToFileName(pageUrl));
-    const expectedErrorMessage = `ENOENT: no such file or directory, open '${outputFilePath}'`;
-    await expect(pageLoader(pageUrl, { output: outputDir })).rejects.toThrow(expectedErrorMessage);
+  test('should make resources folder', async () => {
+    const outputDir = await pfs.mkdtemp(`${tmpDir}${path.sep}`);
+    await pageLoader(pageUrl, { output: outputDir });
+
+    const resourcesFolderPath = makeResourcesFolderPath(pageUrl, outputDir);
+    const isExists = fs.existsSync(resourcesFolderPath);
+
+    expect(isExists).toBeTruthy();
   });
 
-  test('should throw network error', async () => {
-    nock(host).get('/non-existent-page').replyWithError('Network Error');
+  describe('download css', () => {
+    const cssLink = '/assets/css/main.css';
+    nock(host)
+      .get(cssLink)
+      .replyWithFile(200, path.resolve(__dirname, 'replies/assets/css/main.css'), {
+        'Content-Type': 'text/plain',
+      });
 
-    const outputDir = await pfs.mkdtemp(`${tmpDir}${path.sep}`);
-    await expect(pageLoader('/non-existent-page', { output: outputDir })).rejects.toThrow('Network Error');
+    test('should create css file', async () => {
+      const outputDir = await pfs.mkdtemp(`${tmpDir}${path.sep}`);
+      await pageLoader(pageUrl, { output: outputDir });
+
+      const cssResourcePath = makeResourcePath(pageUrl, cssLink, outputDir);
+      const isExists = fs.existsSync(cssResourcePath);
+
+      expect(isExists).toBeTruthy();
+    });
   });
 });

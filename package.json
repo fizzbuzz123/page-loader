@@ -27,13 +27,19 @@
     "url": "https://github.com/Haliont/backend-project-lvl3/issues"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/__tests__/replies/assets/js/",
+      "/node_modules/"
+    ]
   },
   "homepage": "https://github.com/Haliont/backend-project-lvl3#readme",
   "dependencies": {
     "@babel/plugin-proposal-pipeline-operator": "^7.5.0",
     "axios": "^0.19.0",
+    "cheerio": "^1.0.0-rc.3",
     "commander": "^3.0.1",
+    "lodash": "^4.17.15",
     "source-map-support": "^0.5.13"
   },
   "devDependencies": {

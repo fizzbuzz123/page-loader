@@ -1,20 +1,35 @@
-// eslint-disable-next-line import/prefer-default-export
-export const pageUrlToFileName = (pageUrl) => {
+import path from 'path';
+
+export const replaceSymbols = (str) => str.replace(/\W/g, '-');
+
+// make names
+export const makeBaseName = (pageUrl) => {
   const withoutProtocol = pageUrl.replace(new RegExp('https?://'), '');
-  const withoutDotHtml = withoutProtocol.replace(new RegExp('.html(,|$)'), '');
-  return `${withoutDotHtml.replace(/\W/g, '-')}.html`;
+  const withoutHtmlExt = withoutProtocol.replace(new RegExp('.html(,|$)'), '');
+  return replaceSymbols(withoutHtmlExt);
 };
 
-export const makeSpinner = () => {
-  const spinnerChars = ['\\', '|', '/', '-'];
+export const makeHtmlFileName = (pageUrl) => `${makeBaseName(pageUrl)}.html`;
 
-  let x = 0;
-  const intervalId = setInterval(() => {
-    process.stdout.write(`\r${spinnerChars[x]}`);
-    x += 1;
-    // eslint-disable-next-line no-bitwise
-    x &= 3;
-  }, 250);
+export const makeResourcesFolderName = (pageUrl) => `${makeBaseName(pageUrl)}_files`;
 
-  return () => clearInterval(intervalId);
+export const makeResourceName = (resourceLink) => {
+  const extname = path.extname(resourceLink);
+  const withoutFirstSlash = resourceLink.replace(/^\/?/, '');
+  const withoutExtname = withoutFirstSlash.replace(new RegExp(`${extname}$`), '');
+
+  return `${replaceSymbols(withoutExtname)}${extname}`;
 };
+
+// make paths
+export const makeHtmlFilePath = (pageUrl, outputDir) => path
+  .resolve(outputDir, makeHtmlFileName(pageUrl));
+
+export const makeResourcesFolderPath = (pageUrl, outputDir) => path
+  .resolve(outputDir, makeResourcesFolderName(pageUrl));
+
+export const makeResourcePath = (pageUrl, resourceLink, outputDir) => path
+  .resolve(makeResourcesFolderPath(pageUrl, outputDir), makeResourceName(resourceLink));
+
+// other
+export const extractResponseData = (response) => response.data;

@@ -2,7 +2,7 @@
 import program from 'commander';
 import pageLoader from '..';
 import { version, description } from '../../package.json';
-import { pageUrlToFileName } from '../utils';
+import { makeHtmlFileName } from '../utils';
 
 const { log } = console;
 
@@ -14,7 +14,7 @@ program
   .action((pageUrl, options) => {
     pageLoader(pageUrl, options)
       .then(() => {
-        log(`Page was downloaded as '${pageUrlToFileName(pageUrl)}'`);
+        log(`Page was downloaded as '${makeHtmlFileName(pageUrl)}'`);
       })
       .catch(log);
   });
