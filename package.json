@@ -29,7 +29,7 @@
   "jest": {
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
-      "/__tests__/replies/assets/js/",
+      "/__tests__/__fixtures__/",
       "/node_modules/"
     ]
   },

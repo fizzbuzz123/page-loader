@@ -1,75 +1,56 @@
 import fs from 'fs';
-import _ from 'lodash';
-import cheerio from 'cheerio';
-// import path from 'path';
+import path from 'path';
 import axios from 'axios';
 import {
-  makeHtmlFilePath, makeResourcesFolderPath, makeResourcePath, extractResponseData,
+  makeHtmlFilePath, makeResourcesFolderPath, makeRelativeResourcePath, extractResponseData,
 } from './utils';
+import extractResourcesUrls from './utils/extract-resources-urls';
+import replaceResourcesUrls from './utils/replace-resources-urls';
 
 const { promises: pfs } = fs;
 
-const selectors = {
-  IMG: 'img[src]',
-  SCRIPT: 'script[src]',
-  STYLESHEET: 'link[rel="stylesheet"][href]',
-};
+function configureDownloadResources(urls, urlsPathMap, outputDir, origin) {
+  const makeFullUrl = (url) => (url.startsWith('/') ? `${origin}${url}` : url);
 
-function extractResourcesUrls(htmlText) {
-  const $ = cheerio.load(htmlText);
+  const download = (url) => axios
+    .get(makeFullUrl(url))
+    .then(extractResponseData)
+    .then((fileData) => {
+      const filePath = path.resolve(outputDir, urlsPathMap[url]);
+      return pfs.writeFile(filePath, fileData);
+    });
 
-  function extract(selector, attr = 'src') {
-    const elements = $('html').find(selector);
-    return elements.toArray().map((element) => $(element).attr(attr));
-  }
-
-  const cssUrls = extract(selectors.STYLESHEET, 'href');
-  const imgUrls = extract(selectors.IMG);
-  const scriptUrls = extract(selectors.SCRIPT);
-
-  return _.flatten(cssUrls, imgUrls, scriptUrls);
+  return () => Promise.all(urls.map(download));
 }
 
 function pageLoader(pageUrl, options = {}) {
   const { output: outputDir } = options;
+  const { origin } = new URL(pageUrl);
 
-  // const makeHtmlFile = (htmlText) => pfs
-  //   .writeFile(makeHtmlFilePath(pageUrl, outputDir), htmlText)
-  //   .then(() => htmlText);
+  const makeHtmlFile = (htmlText) => pfs.writeFile(makeHtmlFilePath(pageUrl, outputDir), htmlText);
+  const makeResourcesFolder = () => pfs.mkdir(makeResourcesFolderPath(pageUrl, outputDir));
 
-  // const makeResourcesFolder = (htmlText) => pfs
-  //   .mkdir(makeResourcesFolderPath(pageUrl, outputDir))
-  //   .then(() => htmlText);
-
-  // .then(makeHtmlFile)
-  // .then(makeResourcesFolder)
+  const makeUrlsPathMap = (urls) => urls
+    .reduce((acc, url) => ({ ...acc, [url]: makeRelativeResourcePath(pageUrl, url) }), {});
 
   function main(htmlText) {
+    const resourcesUrls = extractResourcesUrls(htmlText, origin);
 
-    // const $ = cheerio.load(htmlText);
+    if (!resourcesUrls.length) {
+      return makeHtmlFile(htmlText);
+    }
 
-    // get all css urls
+    const urlsPathMap = makeUrlsPathMap(resourcesUrls);
+    const replacedHtmlText = replaceResourcesUrls(htmlText, urlsPathMap);
 
-    // const cssUrls = extractUrls('link[rel="stylesheet"][href]', 'href');
-    // const download = (url) => {
-    //   const cssFilePath = makeResourcePath(pageUrl, url, outputDir);
-    //   return axios.get(url).then(extractResponseData).then((cssText) => pfs.writeFile(cssFilePath, cssText));
-    // };
+    const downloadResources = configureDownloadResources(
+      resourcesUrls, urlsPathMap, outputDir, origin,
+    );
 
-    // return Promise.all(cssUrls.map(download));
-    // const imgUrls = extractUrls('img[src]');
-    // const scriptUrls = extractUrls('script[src]');
+    return makeHtmlFile(replacedHtmlText)
+      .then(makeResourcesFolder)
+      .then(downloadResources);
   }
-
-  // get htmlText
-  // get all resources links
-
-  // if has resources links
-  //   create resources folder
-  //   download all resources and create files
-  //   replace all resources links to local paths
-
-  // create html file
 
   return axios
     .get(pageUrl)

@@ -18,7 +18,7 @@ export const makeResourceName = (resourceLink) => {
   const withoutFirstSlash = resourceLink.replace(/^\/?/, '');
   const withoutExtname = withoutFirstSlash.replace(new RegExp(`${extname}$`), '');
 
-  return `${replaceSymbols(withoutExtname)}${extname}`;
+  return `${makeBaseName(withoutExtname)}${extname}`;
 };
 
 // make paths
@@ -28,8 +28,8 @@ export const makeHtmlFilePath = (pageUrl, outputDir) => path
 export const makeResourcesFolderPath = (pageUrl, outputDir) => path
   .resolve(outputDir, makeResourcesFolderName(pageUrl));
 
-export const makeResourcePath = (pageUrl, resourceLink, outputDir) => path
-  .resolve(makeResourcesFolderPath(pageUrl, outputDir), makeResourceName(resourceLink));
+export const makeRelativeResourcePath = (pageUrl, resourceLink) => path
+  .join(makeResourcesFolderName(pageUrl), makeResourceName(resourceLink));
 
 // other
 export const extractResponseData = (response) => response.data;

@@ -3,7 +3,7 @@ import {
   makeResourcesFolderPath,
   makeHtmlFileName, makeBaseName,
   makeResourcesFolderName, makeResourceName, replaceSymbols,
-  makeResourcePath, makeHtmlFilePath,
+  makeRelativeResourcePath, makeHtmlFilePath,
 } from '../src/utils';
 
 describe('utils', () => {
@@ -74,10 +74,10 @@ describe('utils', () => {
       expect(result).toBe(expected);
     });
 
-    test('should make resource path', () => {
+    test('should make relative resource path', () => {
       const resourceLink = '/assets/application.css';
-      const result = makeResourcePath(pageUrl, resourceLink, outputDir);
-      expect(result).toBe('/var/tmp/ru-hexlet-io-courses_files/assets-application.css');
+      const result = makeRelativeResourcePath(pageUrl, resourceLink);
+      expect(result).toBe('ru-hexlet-io-courses_files/assets-application.css');
     });
   });
 });
