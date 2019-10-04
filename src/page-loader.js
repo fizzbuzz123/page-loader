@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+import createDebug from 'debug';
 import {
   makeHtmlFilePath, makeResourcesFolderPath, makeRelativeResourcePath, extractResponseData,
 } from './utils';
@@ -9,7 +10,13 @@ import replaceResourcesUrls from './utils/replace-resources-urls';
 
 const { promises: pfs } = fs;
 
+const debug = createDebug('page-loader');
+
+debug('booting');
+
 function configureDownloadResources(urls, urlsPathMap, outputDir, origin) {
+  debug('configureDownloadResources');
+
   const makeFullUrl = (url) => (url.startsWith('/') ? `${origin}${url}` : url);
 
   const download = (url) => axios

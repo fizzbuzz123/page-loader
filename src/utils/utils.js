@@ -1,5 +1,7 @@
 import path from 'path';
 
+export { default as getErrorMessage } from './get-error-message';
+
 export const replaceSymbols = (str) => str.replace(/\W/g, '-');
 
 // make names

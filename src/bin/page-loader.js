@@ -2,9 +2,13 @@
 import program from 'commander';
 import pageLoader from '..';
 import { version, description } from '../../package.json';
-import { makeHtmlFileName } from '../utils';
+import { makeHtmlFileName, getErrorMessage } from '../utils';
 
-const { log } = console;
+function handleError({ error, pageUrl, options }) {
+  const errorMessage = getErrorMessage({ error, pageUrl, options });
+  console.error(errorMessage);
+  process.exit(1);
+}
 
 program
   .version(version)
@@ -14,9 +18,11 @@ program
   .action((pageUrl, options) => {
     pageLoader(pageUrl, options)
       .then(() => {
-        log(`Page was downloaded as '${makeHtmlFileName(pageUrl)}'`);
+        console.log(`Page was downloaded as '${makeHtmlFileName(pageUrl)}'`);
       })
-      .catch(log);
+      .catch((error) => {
+        handleError({ error, pageUrl, options });
+      });
   });
 
 program.parse(process.argv);
