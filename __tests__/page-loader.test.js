@@ -10,6 +10,7 @@ import {
 } from '../src/utils';
 
 const host = 'https://my-site';
+// const host = 'http://localhost';
 
 axios.defaults.host = host;
 axios.defaults.adapter = httpAdapter;
@@ -22,15 +23,23 @@ const expectedHtmlFilePath = makeFixturePath('expected/my-site-index.html');
 const expectedCssFilePath = makeFixturePath('expected/my-site-index_files', 'assets-css-main.css');
 const replyCssFilePath = makeFixturePath('replies/assets/css/main.css');
 
-const expectedImgFilePath = makeFixturePath('expected/my-site-index_files', 'assets-images-cat.jpg');
-const replyImgFilePath = makeFixturePath('replies/assets/images/cat.jpg');
+const expectedImgFilePath1 = makeFixturePath('expected/my-site-index_files', 'assets-images-cat1.jpg');
+const replyImgFilePath1 = makeFixturePath('replies/assets/images/cat1.jpg');
+
+const expectedImgFilePath2 = makeFixturePath('expected/my-site-index_files', 'assets-images-cat2.jpg');
+const replyImgFilePath2 = makeFixturePath('replies/assets/images/cat2.jpg');
+
+const expectedImgFilePath3 = makeFixturePath('expected/my-site-index_files', 'assets-images-cat3.jpg');
+const replyImgFilePath3 = makeFixturePath('replies/assets/images/cat3.jpg');
 
 const replyScriptFilePath = makeFixturePath('replies/assets/js/main.js');
 const expectedScriptFilePath = makeFixturePath('expected/my-site-index_files', 'assets-js-main.js');
 
 const pageUrl = `${host}/index`;
 const cssUrl = '/assets/css/main.css';
-const imgUrl = '/assets/images/cat.jpg';
+const imgUrl1 = '/assets/images/cat1.jpg';
+const imgUrl2 = '/assets/images/cat2.jpg';
+const imgUrl3 = '/assets/images/cat3.jpg';
 const scriptUrl = '/assets/js/main.js';
 
 const { promises: pfs } = fs;
@@ -42,7 +51,9 @@ describe('Page loader', () => {
   beforeEach(async () => {
     nock(host).get('/index').replyWithFile(200, replyHtmlFilePath, { 'Content-Type': 'text/html' });
     nock(host).get('/assets/css/main.css').replyWithFile(200, replyCssFilePath, { 'Content-Type': 'text/plain' });
-    nock(host).get('/assets/images/cat.jpg').replyWithFile(200, replyImgFilePath, { 'Content-Type': 'text/plain' });
+    nock(host).get('/assets/images/cat1.jpg').replyWithFile(200, replyImgFilePath1, { 'Content-Type': 'text/plain' });
+    nock(host).get('/assets/images/cat2.jpg').replyWithFile(200, replyImgFilePath2, { 'Content-Type': 'text/plain' });
+    nock(host).get('/assets/images/cat3.jpg').replyWithFile(200, replyImgFilePath3, { 'Content-Type': 'text/plain' });
     nock(host).get('/assets/js/main.js').replyWithFile(200, replyScriptFilePath, { 'Content-Type': 'text/plain' });
 
     outputDir = await pfs.mkdtemp(`${tmpDir}${path.sep}`);
@@ -66,18 +77,20 @@ describe('Page loader', () => {
   });
 
   test('should download css', async () => {
+    const expectedFileContent = await pfs.readFile(expectedCssFilePath, 'utf-8');
     const cssResourcePath = path.resolve(outputDir, makeRelativeResourcePath(pageUrl, cssUrl));
     const createdFileContent = await pfs.readFile(cssResourcePath, 'utf-8');
 
-    const expectedFileContent = await pfs.readFile(expectedCssFilePath, 'utf-8');
+    pfs.readFile(expectedCssFilePath, 'utf-8');
     expect(createdFileContent).toEqual(expectedFileContent);
   });
 
   test('should download img', async () => {
-    const imgResourcePath = path.resolve(outputDir, makeRelativeResourcePath(pageUrl, imgUrl));
+    const imgResourcePath = path.resolve(outputDir, makeRelativeResourcePath(pageUrl, imgUrl1));
+
     const createdFileContent = await pfs.readFile(imgResourcePath, 'utf-8');
 
-    const expectedFileContent = await pfs.readFile(expectedImgFilePath, 'utf-8');
+    const expectedFileContent = await pfs.readFile(expectedImgFilePath1, 'utf-8');
     expect(createdFileContent).toEqual(expectedFileContent);
   });
 

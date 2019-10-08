@@ -1,26 +1,43 @@
 import fs from 'fs';
+import { resolve as resolveUrl } from 'url';
 import path from 'path';
 import axios from 'axios';
 import createDebug from 'debug';
 import {
-  makeHtmlFilePath, makeResourcesFolderPath, makeRelativeResourcePath, extractResponseData,
+  makeHtmlFilePath,
+  makeResourcesFolderPath,
+  makeRelativeResourcePath,
+  extractResponseData,
+  extractResourcesUrls,
+  replaceResourcesUrls,
+  getContentType,
 } from './utils';
-import extractResourcesUrls from './utils/extract-resources-urls';
-import replaceResourcesUrls from './utils/replace-resources-urls';
 
 const { promises: pfs } = fs;
 
 const debug = createDebug('page-loader');
 
 debug('booting');
-
 function configureDownloadResources(urls, urlsPathMap, outputDir, origin) {
   debug('configureDownloadResources');
+  debug('urls', urls);
+  debug('urlsPathMap', urlsPathMap);
+  debug('outputDir', outputDir);
+  debug('origin', origin);
 
-  const makeFullUrl = (url) => (url.startsWith('/') ? `${origin}${url}` : url);
+  const makeFullUrl = (url) => resolveUrl(origin, url);
+
+  debug('fullUrls', urls.map(makeFullUrl));
 
   const download = (url) => axios
-    .get(makeFullUrl(url))
+    .request({
+      responseType: 'arraybuffer',
+      url: makeFullUrl(url),
+      method: 'GET',
+      headers: {
+        'Content-Type': getContentType(url),
+      },
+    })
     .then(extractResponseData)
     .then((fileData) => {
       const filePath = path.resolve(outputDir, urlsPathMap[url]);
@@ -31,8 +48,13 @@ function configureDownloadResources(urls, urlsPathMap, outputDir, origin) {
 }
 
 function pageLoader(pageUrl, options = {}) {
+  debug('pageUrl', pageUrl);
+
   const { output: outputDir } = options;
   const { origin } = new URL(pageUrl);
+
+  debug('outputDir', outputDir);
+  debug('origin', origin);
 
   const makeHtmlFile = (htmlText) => pfs.writeFile(makeHtmlFilePath(pageUrl, outputDir), htmlText);
   const makeResourcesFolder = () => pfs.mkdir(makeResourcesFolderPath(pageUrl, outputDir));
@@ -42,6 +64,7 @@ function pageLoader(pageUrl, options = {}) {
 
   function main(htmlText) {
     const resourcesUrls = extractResourcesUrls(htmlText, origin);
+    debug('resourcesUrls', resourcesUrls);
 
     if (!resourcesUrls.length) {
       return makeHtmlFile(htmlText);
@@ -49,6 +72,8 @@ function pageLoader(pageUrl, options = {}) {
 
     const urlsPathMap = makeUrlsPathMap(resourcesUrls);
     const replacedHtmlText = replaceResourcesUrls(htmlText, urlsPathMap);
+
+    debug('urlsPathMap', urlsPathMap);
 
     const downloadResources = configureDownloadResources(
       resourcesUrls, urlsPathMap, outputDir, origin,

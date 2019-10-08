@@ -38,6 +38,11 @@ describe('utils', () => {
       const result = makeBaseName('http://shitpoet.tk/move-arrow-keys.html');
       expect(result).toBe('shitpoet-tk-move-arrow-keys');
     });
+
+    test('ends with slash', () => {
+      const result = makeBaseName('http://shitpoet.tk/move-arrow-keys/');
+      expect(result).toBe('shitpoet-tk-move-arrow-keys');
+    });
   });
 
   describe('make names', () => {
@@ -78,6 +83,12 @@ describe('utils', () => {
       const resourceLink = '/assets/application.css';
       const result = makeRelativeResourcePath(pageUrl, resourceLink);
       expect(result).toBe('ru-hexlet-io-courses_files/assets-application.css');
+    });
+
+    test('should make relative resource path with protocol', () => {
+      const resourceLink = 'https://github.com/assets/image.jpg';
+      const result = makeRelativeResourcePath(pageUrl, resourceLink);
+      expect(result).toBe('ru-hexlet-io-courses_files/github-com-assets-image.jpg');
     });
   });
 });

@@ -5,8 +5,8 @@ import { version, description } from '../../package.json';
 import { makeHtmlFileName, getErrorMessage } from '../utils';
 
 function handleError({ error, pageUrl, options }) {
-  const errorMessage = getErrorMessage({ error, pageUrl, options });
-  console.error(errorMessage);
+  // const errorMessage = getErrorMessage({ error, pageUrl, options });
+  console.error(error);
   process.exit(1);
 }
 
