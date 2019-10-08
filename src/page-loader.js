@@ -2,6 +2,7 @@ import fs from 'fs';
 import { resolve as resolveUrl } from 'url';
 import path from 'path';
 import axios from 'axios';
+import Listr from 'listr';
 import createDebug from 'debug';
 import {
   makeHtmlFilePath,
@@ -90,4 +91,7 @@ function pageLoader(pageUrl, options = {}) {
     .then(main);
 }
 
-export default pageLoader;
+export default (...args) => new Listr([{
+  title: 'page-loader',
+  task: () => pageLoader(...args),
+}]).run();
