@@ -45,7 +45,10 @@ function configureDownloadResources(urls, urlsPathMap, outputDir, origin) {
       return pfs.writeFile(filePath, fileData);
     });
 
-  return () => Promise.all(urls.map(download));
+  return () => new Listr(urls.map((url) => ({
+    title: `Download ${makeFullUrl(url)}`,
+    task: () => download(url),
+  })), { concurrent: true });
 }
 
 function pageLoader(pageUrl, options = {}) {
@@ -80,9 +83,20 @@ function pageLoader(pageUrl, options = {}) {
       resourcesUrls, urlsPathMap, outputDir, origin,
     );
 
-    return makeHtmlFile(replacedHtmlText)
-      .then(makeResourcesFolder)
-      .then(downloadResources);
+    return new Listr([
+      {
+        title: 'Creating html file',
+        task: () => makeHtmlFile(replacedHtmlText),
+      },
+      {
+        title: 'Creating resource folders',
+        task: makeResourcesFolder,
+      },
+      {
+        title: 'Downloading resources',
+        task: downloadResources,
+      },
+    ]).run();
   }
 
   return axios
@@ -91,7 +105,4 @@ function pageLoader(pageUrl, options = {}) {
     .then(main);
 }
 
-export default (...args) => new Listr([{
-  title: 'page-loader',
-  task: () => pageLoader(...args),
-}]).run();
+export default pageLoader;
