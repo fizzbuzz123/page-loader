@@ -7,7 +7,8 @@ Command line interface to download pages.
 ## Installation:
 1. `git clone https://github.com/Haliont/backend-project-lvl3.git`
 2. `cd backend-project-lvl3`
-3. `npm link`
+3. `make install`
+4. `npm link`
 
 ## Usage:
 ```
