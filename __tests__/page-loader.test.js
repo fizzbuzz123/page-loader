@@ -26,10 +26,8 @@ const replyCssFilePath = makeFixturePath('replies/assets/css/main.css');
 const expectedImgFilePath1 = makeFixturePath('expected/my-site-index_files', 'assets-images-cat1.jpg');
 const replyImgFilePath1 = makeFixturePath('replies/assets/images/cat1.jpg');
 
-const expectedImgFilePath2 = makeFixturePath('expected/my-site-index_files', 'assets-images-cat2.jpg');
 const replyImgFilePath2 = makeFixturePath('replies/assets/images/cat2.jpg');
 
-const expectedImgFilePath3 = makeFixturePath('expected/my-site-index_files', 'assets-images-cat3.jpg');
 const replyImgFilePath3 = makeFixturePath('replies/assets/images/cat3.jpg');
 
 const replyScriptFilePath = makeFixturePath('replies/assets/js/main.js');
@@ -38,8 +36,6 @@ const expectedScriptFilePath = makeFixturePath('expected/my-site-index_files', '
 const pageUrl = `${host}/index`;
 const cssUrl = '/assets/css/main.css';
 const imgUrl1 = '/assets/images/cat1.jpg';
-const imgUrl2 = '/assets/images/cat2.jpg';
-const imgUrl3 = '/assets/images/cat3.jpg';
 const scriptUrl = '/assets/js/main.js';
 
 const { promises: pfs } = fs;
