@@ -8,7 +8,8 @@ Command line interface to download pages.
 1. `git clone https://github.com/Haliont/backend-project-lvl3.git`
 2. `cd backend-project-lvl3`
 3. `make install`
-4. `npm link`
+4. `make publish`
+5. `npm link`
 
 ## Usage:
 ```
@@ -21,9 +22,6 @@ Options:
 ```
 
 ## Examples:
-[![asciicast](https://asciinema.org/a/OcWc6Izo5CKz0F27mWjd2pyLv.svg)](https://asciinema.org/a/OcWc6Izo5CKz0F27mWjd2pyLv)
-
-or
-
-[![asciicast](https://asciinema.org/a/wa5gqAQaOJ3Vqp2xHpRtYvMwH.svg)](https://asciinema.org/a/wa5gqAQaOJ3Vqp2xHpRtYvMwH)
-
+Install and usage: https://asciinema.org/a/kBdiX7Bj66e2zZ4o3aPnhauj2
+Fs error demo: https://asciinema.org/a/4PhGHfMp0KWO7vy7w9JhURu9Z
+Network error demo: https://asciinema.org/a/RMKT2miedjG6HqkyskXA0qTRN
