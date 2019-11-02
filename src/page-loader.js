@@ -99,7 +99,8 @@ const loadPage = (pageUrl, options = {}) => {
     .then(main)
     .then(() => `Page was downloaded as '${makeHtmlFileName(pageUrl)}'`)
     .catch((error) => {
-      throw new Error(getErrorMessage({ error, pageUrl, options }));
+      console.log(JSON.stringify(error));
+      throw new Error(getErrorMessage(error));
     });
 };
 

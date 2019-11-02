@@ -6,13 +6,11 @@ import path from 'path';
 import os from 'os';
 import pageLoader from '../src';
 import {
-  makeHtmlFilePath, makeResourcesFolderPath, makeRelativeResourcePath,
+  makeHtmlFilePath, makeResourcesFolderPath, makeRelativeResourcePath, makeHtmlFileName,
 } from '../src/utils';
 
 const host = 'https://my-site';
-// const host = 'http://localhost';
 
-axios.defaults.host = host;
 axios.defaults.adapter = httpAdapter;
 
 const makeFixturePath = (...args) => path.resolve(__dirname, '__fixtures__', ...args);
@@ -45,12 +43,12 @@ const tmpDir = os.tmpdir();
 describe('Page loader', () => {
   let outputDir = null;
   beforeEach(async () => {
-    nock(host).get('/index').replyWithFile(200, replyHtmlFilePath, { 'Content-Type': 'text/html' });
-    nock(host).get('/assets/css/main.css').replyWithFile(200, replyCssFilePath, { 'Content-Type': 'text/plain' });
-    nock(host).get('/assets/images/cat1.jpg').replyWithFile(200, replyImgFilePath1, { 'Content-Type': 'text/plain' });
-    nock(host).get('/assets/images/cat2.jpg').replyWithFile(200, replyImgFilePath2, { 'Content-Type': 'text/plain' });
-    nock(host).get('/assets/images/cat3.jpg').replyWithFile(200, replyImgFilePath3, { 'Content-Type': 'text/plain' });
-    nock(host).get('/assets/js/main.js').replyWithFile(200, replyScriptFilePath, { 'Content-Type': 'text/plain' });
+    nock(host).get('/index').replyWithFile(200, replyHtmlFilePath);
+    nock(host).get('/assets/css/main.css').replyWithFile(200, replyCssFilePath);
+    nock(host).get('/assets/images/cat1.jpg').replyWithFile(200, replyImgFilePath1);
+    nock(host).get('/assets/images/cat2.jpg').replyWithFile(200, replyImgFilePath2);
+    nock(host).get('/assets/images/cat3.jpg').replyWithFile(200, replyImgFilePath3);
+    nock(host).get('/assets/js/main.js').replyWithFile(200, replyScriptFilePath);
 
     outputDir = await pfs.mkdtemp(`${tmpDir}${path.sep}`);
     await pageLoader(pageUrl, { output: outputDir });
@@ -65,11 +63,9 @@ describe('Page loader', () => {
     expect(createdFileContent).toEqual(expectedFileContent);
   });
 
-  test('should make resources folder', () => {
+  test('should make resources folder', async () => {
     const resourcesFolderPath = makeResourcesFolderPath(pageUrl, outputDir);
-    const isExists = fs.existsSync(resourcesFolderPath);
-
-    expect(isExists).toBeTruthy();
+    await pfs.stat(resourcesFolderPath);
   });
 
   test('should download css', async () => {
@@ -100,22 +96,15 @@ describe('Page loader', () => {
   });
 
   test('should throw fs error', async () => {
-    nock(host).get('/index').replyWithFile(200, replyHtmlFilePath, { 'Content-Type': 'text/html' });
-    expect.assertions(1);
-    try {
-      await pageLoader(pageUrl, { output: path.resolve(__dirname, 'non-exists-dir') });
-    } catch (e) {
-      expect(e.code).toEqual('ENOENT');
-    }
+    nock(host).get('/index').replyWithFile(200, replyHtmlFilePath);
+    const expectedErrMessage = `ENOENT: no such file or directory, open '${path.resolve(__dirname, 'non-exists-dir', makeHtmlFileName(pageUrl))}'`;
+
+    await expect(pageLoader(pageUrl, { output: path.resolve(__dirname, 'non-exists-dir') })).rejects.toThrow(expectedErrMessage);
   });
 
   test('should throw network error', async () => {
-    nock(host).get('/non-exists-url').reply(503);
-    expect.assertions(1);
-    try {
-      await pageLoader(`${host}/non-exists-url`, { output: outputDir });
-    } catch (e) {
-      expect(e.response.status).toEqual(503);
-    }
+    nock(host).get('/url-with-error').reply(503);
+    const expectedErrMessage = 'Request failed with status code 503';
+    await expect(pageLoader(`${host}/url-with-error`, { output: outputDir })).rejects.toThrow(expectedErrMessage);
   });
 });
