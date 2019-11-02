@@ -51,7 +51,7 @@ const configureDownloadResources = (urls, urlsPathMap, outputDir, origin) => {
   })), { concurrent: true });
 };
 
-const pageLoader = (pageUrl, options = {}) => {
+const loadPage = (pageUrl, options = {}) => {
   debug('pageUrl', pageUrl);
 
   const { output: outputDir } = options;
@@ -105,4 +105,4 @@ const pageLoader = (pageUrl, options = {}) => {
     .then(main);
 };
 
-export default pageLoader;
+export default loadPage;
