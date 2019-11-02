@@ -2,11 +2,9 @@
 import program from 'commander';
 import pageLoader from '..';
 import { version, description } from '../../package.json';
-import { makeHtmlFileName, getErrorMessage } from '../utils';
 
-function handleError({ error, pageUrl, options }) {
-  const errorMessage = getErrorMessage({ error, pageUrl, options });
-  console.error(errorMessage);
+function handleError(error) {
+  console.error(error.message);
   process.exit(1);
 }
 
@@ -17,12 +15,8 @@ program
   .option('-o, --output <type>', 'the directory where the site will be saved', process.cwd())
   .action((pageUrl, options) => {
     pageLoader(pageUrl, options)
-      .then(() => {
-        console.log(`Page was downloaded as '${makeHtmlFileName(pageUrl)}'`);
-      })
-      .catch((error) => {
-        handleError({ error, pageUrl, options });
-      });
+      .then(console.log)
+      .catch(handleError);
   });
 
 program.parse(process.argv);

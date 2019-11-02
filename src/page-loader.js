@@ -11,7 +11,8 @@ import {
   extractResponseData,
   extractResourcesUrls,
   replaceResourcesUrls,
-  getContentType,
+  makeHtmlFileName,
+  getErrorMessage,
 } from './utils';
 
 const { promises: pfs } = fs;
@@ -95,7 +96,11 @@ const loadPage = (pageUrl, options = {}) => {
   return axios
     .get(pageUrl)
     .then(extractResponseData)
-    .then(main);
+    .then(main)
+    .then(() => `Page was downloaded as '${makeHtmlFileName(pageUrl)}'`)
+    .catch((error) => {
+      throw new Error(getErrorMessage({ error, pageUrl, options }));
+    });
 };
 
 export default loadPage;
