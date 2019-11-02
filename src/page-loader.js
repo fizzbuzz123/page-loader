@@ -19,7 +19,7 @@ const { promises: pfs } = fs;
 const debug = createDebug('page-loader');
 
 debug('booting');
-function configureDownloadResources(urls, urlsPathMap, outputDir, origin) {
+const configureDownloadResources = (urls, urlsPathMap, outputDir, origin) => {
   debug('configureDownloadResources');
   debug('urls', urls);
   debug('urlsPathMap', urlsPathMap);
@@ -49,9 +49,9 @@ function configureDownloadResources(urls, urlsPathMap, outputDir, origin) {
     title: `Download ${makeFullUrl(url)}`,
     task: () => download(url),
   })), { concurrent: true });
-}
+};
 
-function pageLoader(pageUrl, options = {}) {
+const pageLoader = (pageUrl, options = {}) => {
   debug('pageUrl', pageUrl);
 
   const { output: outputDir } = options;
@@ -66,7 +66,7 @@ function pageLoader(pageUrl, options = {}) {
   const makeUrlsPathMap = (urls) => urls
     .reduce((acc, url) => ({ ...acc, [url]: makeRelativeResourcePath(pageUrl, url) }), {});
 
-  function main(htmlText) {
+  const main = (htmlText) => {
     const resourcesUrls = extractResourcesUrls(htmlText, origin);
     debug('resourcesUrls', resourcesUrls);
 
@@ -97,12 +97,12 @@ function pageLoader(pageUrl, options = {}) {
         task: downloadResources,
       },
     ]).run();
-  }
+  };
 
   return axios
     .get(pageUrl)
     .then(extractResponseData)
     .then(main);
-}
+};
 
 export default pageLoader;

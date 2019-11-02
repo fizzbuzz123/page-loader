@@ -1,4 +1,4 @@
-function getErrorMessage({ error, pageUrl, options }) {
+const getErrorMessage = ({ error, pageUrl, options }) => {
   if (error.response) {
     return error.response.statusText;
   }
@@ -11,6 +11,6 @@ function getErrorMessage({ error, pageUrl, options }) {
     default:
       return 'Something went wrong. Try again.';
   }
-}
+};
 
 export default getErrorMessage;

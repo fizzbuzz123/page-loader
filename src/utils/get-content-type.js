@@ -1,6 +1,6 @@
 import path from 'path';
 
-function getContentType(url) {
+const getContentType = (url) => {
   const extname = path.extname(url);
 
   /* eslint-disable key-spacing */
@@ -22,6 +22,6 @@ function getContentType(url) {
 
   if (!contentType) return defaultContentType;
   return contentType;
-}
+};
 
 export default getContentType;
