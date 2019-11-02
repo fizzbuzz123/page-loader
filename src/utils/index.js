@@ -1,7 +1,6 @@
 import path from 'path';
 
 export { default as getErrorMessage } from './get-error-message';
-export { default as getContentType } from './get-content-type';
 export { default as extractResourcesUrls } from './extract-resources-urls';
 export { default as replaceResourcesUrls } from './replace-resources-urls';
 

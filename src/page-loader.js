@@ -31,14 +31,7 @@ const configureDownloadResources = (urls, urlsPathMap, outputDir, origin) => {
   debug('fullUrls', urls.map(makeFullUrl));
 
   const download = (url) => axios
-    .request({
-      responseType: 'arraybuffer',
-      url: makeFullUrl(url),
-      method: 'GET',
-      headers: {
-        'Content-Type': getContentType(url),
-      },
-    })
+    .get(makeFullUrl(url), { responseType: 'arraybuffer' })
     .then(extractResponseData)
     .then((fileData) => {
       const filePath = path.resolve(outputDir, urlsPathMap[url]);
