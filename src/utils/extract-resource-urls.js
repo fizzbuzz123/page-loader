@@ -6,7 +6,7 @@ const mapping = {
   script: 'src',
 };
 
-const elementsSelector = 'img[src], script[src], link[rel="stylesheet"][href]';
+const elementsSelector = 'img[src^="http"], script[src], link[rel="stylesheet"][href]';
 const extractResourceUrls = (htmlText) => {
   const $ = cheerio.load(htmlText);
   const elements = $(elementsSelector).toArray();
