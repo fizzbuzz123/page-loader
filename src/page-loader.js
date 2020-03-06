@@ -43,6 +43,7 @@ const loadPage = (pageUrl, outputDir) => {
   const htmlFilePath = path.resolve(outputDir, htmlFileName);
   const resourcesFolderPath = path.resolve(outputDir, resourcesFolderName);
 
+  debug('pageUrl', pageUrl);
   debug('basename', basename);
   debug('htmlFileName', htmlFileName);
   debug('htmlFilePath', htmlFilePath);

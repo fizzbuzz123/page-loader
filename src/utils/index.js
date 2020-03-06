@@ -6,17 +6,19 @@ export { default as extractResourceUrls } from './extract-resource-urls';
 const pipe = (...ops) => ops.reduce((a, b) => (arg) => b(a(arg)));
 
 const removeFirstSlash = (str) => str.replace(/^\//, '');
+const removeLastSlash = (str) => str.replace(/\/(,|$)/, '');
 const removeExt = (str) => {
   const extname = path.extname(str);
   const extnameRegexp = new RegExp([extname, '(,|$)'].join(''));
   return str.replace(extnameRegexp, '');
 };
+const removeHtmlExt = (str) => str.replace(/.html(,|$)/, '');
 const addExt = (extname) => (str) => [str, extname].join('');
 const replaceSymbols = (str) => str.replace(/\W/g, '-');
 
 export const makeBaseName = (pageUrl) => {
   const { hostname, pathname } = new URL(pageUrl);
-  const execute = pipe(removeExt, replaceSymbols);
+  const execute = pipe(removeLastSlash, removeHtmlExt, replaceSymbols);
   return execute([hostname, pathname].join(''));
 };
 
