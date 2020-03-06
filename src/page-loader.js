@@ -5,14 +5,11 @@ import axios from 'axios';
 import Listr from 'listr';
 import createDebug from 'debug';
 import {
-  makeHtmlFilePath,
-  makeResourcesFolderPath,
-  makeRelativeResourcePath,
-  extractResponseData,
-  extractResourcesUrls,
-  replaceResourcesUrls,
-  makeHtmlFileName,
+  makeBaseName,
+  extractResourceUrls,
+  replaceResourceUrls,
   getErrorMessage,
+  makeResourceName,
 } from './utils';
 
 const { promises: pfs } = fs;
@@ -20,84 +17,75 @@ const { promises: pfs } = fs;
 const debug = createDebug('page-loader');
 
 debug('booting');
-const configureDownloadResources = (urls, urlsPathMap, outputDir, origin) => {
-  debug('configureDownloadResources');
-  debug('urls', urls);
-  debug('urlsPathMap', urlsPathMap);
-  debug('outputDir', outputDir);
-  debug('origin', origin);
+const configureDownloadResources = (pageUrl, resourcesFolderPath, resourceUrls) => {
+  const download = (url, destination) => axios
+    .get(url, { responseType: 'arraybuffer' })
+    .then((response) => response.data)
+    .then((fileData) => pfs.writeFile(destination, fileData));
 
-  const makeFullUrl = (url) => resolveUrl(origin, url);
-
-  debug('fullUrls', urls.map(makeFullUrl));
-
-  const download = (url) => axios
-    .get(makeFullUrl(url), { responseType: 'arraybuffer' })
-    .then(extractResponseData)
-    .then((fileData) => {
-      const filePath = path.resolve(outputDir, urlsPathMap[url]);
-      return pfs.writeFile(filePath, fileData);
-    });
-
-  return () => new Listr(urls.map((url) => ({
-    title: `Download ${makeFullUrl(url)}`,
-    task: () => download(url),
-  })), { concurrent: true });
+  return () => new Listr(resourceUrls.map((url) => {
+    const fullUrl = resolveUrl(pageUrl, url);
+    const resourceName = makeResourceName(url);
+    const destination = path.join(resourcesFolderPath, resourceName);
+    return {
+      title: `Download ${fullUrl}`,
+      task: () => download(fullUrl, destination),
+    };
+  }), { concurrent: true });
 };
 
-const loadPage = (pageUrl, options = {}) => {
-  debug('pageUrl', pageUrl);
+const loadPage = (pageUrl, outputDir) => {
+  const basename = makeBaseName(pageUrl);
 
-  const { output: outputDir } = options;
-  const { origin } = new URL(pageUrl);
+  const htmlFileName = [basename, '.html'].join('');
+  const resourcesFolderName = [basename, '_files'].join('');
 
-  debug('outputDir', outputDir);
-  debug('origin', origin);
+  const htmlFilePath = path.resolve(outputDir, htmlFileName);
+  const resourcesFolderPath = path.resolve(outputDir, resourcesFolderName);
 
-  const makeHtmlFile = (htmlText) => pfs.writeFile(makeHtmlFilePath(pageUrl, outputDir), htmlText);
-  const makeResourcesFolder = () => pfs.mkdir(makeResourcesFolderPath(pageUrl, outputDir));
-
-  const makeUrlsPathMap = (urls) => urls
-    .reduce((acc, url) => ({ ...acc, [url]: makeRelativeResourcePath(pageUrl, url) }), {});
-
-  const main = (htmlText) => {
-    const resourcesUrls = extractResourcesUrls(htmlText, origin);
-    debug('resourcesUrls', resourcesUrls);
-
-    if (!resourcesUrls.length) {
-      return makeHtmlFile(htmlText);
-    }
-
-    const urlsPathMap = makeUrlsPathMap(resourcesUrls);
-    const replacedHtmlText = replaceResourcesUrls(htmlText, urlsPathMap);
-
-    debug('urlsPathMap', urlsPathMap);
-
-    const downloadResources = configureDownloadResources(
-      resourcesUrls, urlsPathMap, outputDir, origin,
-    );
-
-    return new Listr([
-      {
-        title: 'Creating html file',
-        task: () => makeHtmlFile(replacedHtmlText),
-      },
-      {
-        title: 'Creating resource folders',
-        task: makeResourcesFolder,
-      },
-      {
-        title: 'Downloading resources',
-        task: downloadResources,
-      },
-    ]).run();
-  };
+  debug('basename', basename);
+  debug('htmlFileName', htmlFileName);
+  debug('htmlFilePath', htmlFilePath);
+  debug('resourcesFolderName', resourcesFolderName);
+  debug('resourcesFolderPath', resourcesFolderPath);
 
   return axios
     .get(pageUrl)
-    .then(extractResponseData)
-    .then(main)
-    .then(() => `Page was downloaded as '${makeHtmlFileName(pageUrl)}'`)
+    .then((response) => response.data)
+    .then((htmlText) => {
+      const resourceUrls = extractResourceUrls(htmlText);
+      debug('resourceUrls', resourceUrls);
+
+      if (resourceUrls.length === 0) {
+        return new Listr([{
+          title: 'Creating html file',
+          task: () => pfs.writeFile(htmlFilePath, htmlText),
+        }]).run();
+      }
+
+      const replacedHtmlText = replaceResourceUrls(
+        htmlText, resourcesFolderName, resourceUrls,
+      );
+      const downloadResources = configureDownloadResources(
+        pageUrl, resourcesFolderPath, resourceUrls,
+      );
+
+      return new Listr([
+        {
+          title: 'Creating html file',
+          task: () => pfs.writeFile(htmlFilePath, replacedHtmlText),
+        },
+        {
+          title: 'Creating resource folders',
+          task: () => pfs.mkdir(resourcesFolderPath),
+        },
+        {
+          title: 'Downloading resources',
+          task: downloadResources,
+        },
+      ]).run();
+    })
+    .then(() => htmlFileName)
     .catch((error) => {
       throw new Error(getErrorMessage(error));
     });
