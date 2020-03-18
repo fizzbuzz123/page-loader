@@ -6,15 +6,18 @@ const mapping = {
   script: 'src',
 };
 
-const elementsSelector = 'img[src], script[src], link[rel="stylesheet"][href]';
 const extractResourceUrls = (htmlText) => {
   const $ = cheerio.load(htmlText);
-  const elements = $(elementsSelector).toArray().filter((el) => {
-    if (el.name !== 'img') return true;
-    return !$(el).attr('src').startsWith('data:');
-  });
-  const urls = elements.map((el) => $(el).attr(mapping[el.name]));
-  return urls;
+  const tags = Object.keys(mapping);
+  const selector = tags.join(',');
+  const urls = $(selector)
+    .toArray()
+    .map((el) => $(el).attr(mapping[el.name]));
+  const validUrls = urls
+    .filter(Boolean)
+    .filter((url) => !url.startsWith('data:'));
+
+  return validUrls;
 };
 
 export default extractResourceUrls;

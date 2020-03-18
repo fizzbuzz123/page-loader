@@ -1,17 +1,11 @@
 import fs from 'fs';
-import axios from 'axios';
-import httpAdapter from 'axios/lib/adapters/http';
 import nock from 'nock';
 import path from 'path';
 import os from 'os';
 import loadPage from '../src';
 
 const host = 'https://my-site';
-
-axios.defaults.adapter = httpAdapter;
-
 const pageUrl = `${host}/index`;
-
 const basename = 'my-site-index';
 const htmlFileName = [basename, '.html'].join('');
 const resourcesFolderName = [basename, '_files'].join('');
@@ -52,10 +46,10 @@ describe('Page loader', () => {
     nock(host).get('/assets/js/main.js').replyWithFile(200, replyScriptFilePath);
 
     outputDir = await pfs.mkdtemp(`${tmpDir}${path.sep}`);
-    await loadPage(pageUrl, outputDir);
   });
 
   test('should download html', async () => {
+    await loadPage(pageUrl, outputDir);
     const expectedFileContent = await pfs.readFile(expectedHtmlFilePath, 'utf-8');
 
     const createdFilePath = path.resolve(outputDir, htmlFileName);
@@ -65,11 +59,13 @@ describe('Page loader', () => {
   });
 
   test('should make resources folder', async () => {
+    await loadPage(pageUrl, outputDir);
     const resourcesFolderPath = path.resolve(outputDir, resourcesFolderName);
     await pfs.stat(resourcesFolderPath);
   });
 
   test('should download css', async () => {
+    await loadPage(pageUrl, outputDir);
     const expectedFileContent = await pfs.readFile(expectedCssFilePath, 'utf-8');
     const cssResourcePath = path.resolve(outputDir, resourcesFolderName, cssFileName);
     const createdFileContent = await pfs.readFile(cssResourcePath, 'utf-8');
@@ -79,6 +75,7 @@ describe('Page loader', () => {
   });
 
   test('should download img', async () => {
+    await loadPage(pageUrl, outputDir);
     const imgResourcePath = path.resolve(outputDir, resourcesFolderName, img1FileName);
 
     const createdFileContent = await pfs.readFile(imgResourcePath, 'utf-8');
@@ -88,6 +85,7 @@ describe('Page loader', () => {
   });
 
   test('should download js', async () => {
+    await loadPage(pageUrl, outputDir);
     const jsResourcePath = path.resolve(outputDir, resourcesFolderName, jsFileName);
     const createdFileContent = await pfs.readFile(jsResourcePath, 'utf-8');
 

@@ -23,15 +23,18 @@ const configureDownloadResources = (pageUrl, resourcesFolderPath, resourceUrls) 
     .then((response) => response.data)
     .then((fileData) => pfs.writeFile(destination, fileData));
 
-  return () => new Listr(resourceUrls.map((url) => {
+  const downloadTasks = resourceUrls.map((url) => {
     const fullUrl = resolveUrl(pageUrl, url);
     const resourceName = makeResourceName(url);
     const destination = path.join(resourcesFolderPath, resourceName);
+
     return {
       title: `Download ${fullUrl}`,
       task: () => download(fullUrl, destination),
     };
-  }), { concurrent: true });
+  });
+
+  return () => new Listr(downloadTasks, { concurrent: true }).run();
 };
 
 const loadPage = (pageUrl, outputDir) => {
@@ -58,33 +61,20 @@ const loadPage = (pageUrl, outputDir) => {
       debug('resourceUrls', resourceUrls);
 
       if (resourceUrls.length === 0) {
-        return new Listr([{
-          title: 'Creating html file',
-          task: () => pfs.writeFile(htmlFilePath, htmlText),
-        }]).run();
+        return pfs.writeFile(htmlFilePath, htmlText);
       }
 
       const replacedHtmlText = replaceResourceUrls(
         htmlText, resourcesFolderName, resourceUrls,
       );
-      const downloadResources = configureDownloadResources(
-        pageUrl, resourcesFolderPath, resourceUrls,
-      );
-
-      return new Listr([
-        {
-          title: 'Creating html file',
-          task: () => pfs.writeFile(htmlFilePath, replacedHtmlText),
-        },
-        {
-          title: 'Creating resource folders',
-          task: () => pfs.mkdir(resourcesFolderPath),
-        },
-        {
-          title: 'Downloading resources',
-          task: downloadResources,
-        },
-      ]).run();
+      return pfs.writeFile(htmlFilePath, replacedHtmlText)
+        .then(() => pfs.mkdir(resourcesFolderPath))
+        .then(() => {
+          const downloadResources = configureDownloadResources(
+            pageUrl, resourcesFolderPath, resourceUrls,
+          );
+          return downloadResources();
+        });
     })
     .then(() => htmlFileName)
     .catch((error) => {

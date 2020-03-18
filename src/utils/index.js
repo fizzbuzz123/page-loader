@@ -3,8 +3,6 @@ import path from 'path';
 export { default as getErrorMessage } from './get-error-message';
 export { default as extractResourceUrls } from './extract-resource-urls';
 
-const pipe = (...ops) => ops.reduce((a, b) => (arg) => b(a(arg)));
-
 const removeFirstSlash = (str) => str.replace(/^\//, '');
 const removeLastSlash = (str) => str.replace(/\/(,|$)/, '');
 const removeExt = (str) => {
@@ -18,8 +16,10 @@ const replaceSymbols = (str) => str.replace(/\W/g, '-');
 
 export const makeBaseName = (pageUrl) => {
   const { hostname, pathname } = new URL(pageUrl);
-  const execute = pipe(removeLastSlash, removeHtmlExt, replaceSymbols);
-  return execute([hostname, pathname].join(''));
+  return [hostname, pathname].join('')
+    |> removeLastSlash
+    |> removeHtmlExt
+    |> replaceSymbols;
 };
 
 export const makeResourceName = (resourceUrl) => {
@@ -29,13 +29,11 @@ export const makeResourceName = (resourceUrl) => {
     url = [hostname, pathname].join('');
   }
   const extname = path.extname(url);
-  const execute = pipe(
-    removeFirstSlash,
-    removeExt,
-    replaceSymbols,
-    addExt(extname),
-  );
-  return execute(url);
+  return url
+    |> removeFirstSlash
+    |> removeExt
+    |> replaceSymbols
+    |> addExt(extname);
 };
 
 export const replaceResourceUrls = (htmlText, resourcesFolderName, resourceUrls) => {
