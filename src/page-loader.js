@@ -15,10 +15,12 @@ const debug = createDebug('page-loader');
 
 debug('booting');
 const downloadResources = (resourceUrls) => {
-  const download = (url, dest) => axios
-    .get(url, { responseType: 'arraybuffer' })
-    .then((response) => response.data)
-    .then((fileData) => pfs.writeFile(dest, fileData));
+  const download = async (url, dest) => {
+    const fileData = await axios
+      .get(url, { responseType: 'arraybuffer' })
+      .then((response) => response.data);
+    return pfs.writeFile(dest, fileData);
+  };
 
   const downloadTasks = resourceUrls.map(({ url, dest }) => ({
     title: `Download ${url}`,
@@ -28,7 +30,7 @@ const downloadResources = (resourceUrls) => {
   return new Listr(downloadTasks, { concurrent: true }).run();
 };
 
-const loadPage = (pageUrl, outputDir) => {
+const loadPage = async (pageUrl, outputDir) => {
   const basename = makeBaseName(pageUrl);
 
   const htmlFileName = [basename, '.html'].join('');
@@ -44,27 +46,26 @@ const loadPage = (pageUrl, outputDir) => {
   debug('resourcesFolderName', resourcesFolderName);
   debug('resourcesFolderPath', resourcesFolderPath);
 
-  return axios
-    .get(pageUrl)
-    .then((response) => response.data)
-    .then((htmlText) => {
-      const [resourceUrls, replacedHtmlText] = getResourceUrlsAndReplacedHtmlText(
-        htmlText, pageUrl, resourcesFolderName, resourcesFolderPath,
-      );
-      debug('resourceUrls', resourceUrls);
+  try {
+    const htmlText = await axios.get(pageUrl).then((response) => response.data);
+    const [resourceUrls, replacedHtmlText] = getResourceUrlsAndReplacedHtmlText(
+      htmlText, pageUrl, resourcesFolderName, resourcesFolderPath,
+    );
 
-      if (resourceUrls.length === 0) {
-        return pfs.writeFile(htmlFilePath, htmlText);
-      }
+    debug('resourceUrls', resourceUrls);
 
-      return pfs.writeFile(htmlFilePath, replacedHtmlText)
-        .then(() => pfs.mkdir(resourcesFolderPath))
-        .then(() => downloadResources(resourceUrls));
-    })
-    .then(() => htmlFileName)
-    .catch((error) => {
-      throw new Error(getErrorMessage(error));
-    });
+    if (resourceUrls.length === 0) {
+      return pfs.writeFile(htmlFilePath, htmlText);
+    }
+
+    await pfs.writeFile(htmlFilePath, replacedHtmlText);
+    await pfs.mkdir(resourcesFolderPath);
+    await downloadResources(resourceUrls);
+
+    return htmlFileName;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
 };
 
 export default loadPage;
