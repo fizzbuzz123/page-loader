@@ -1,4 +1,5 @@
 import fs from 'fs';
+import cheerio from 'cheerio';
 import nock from 'nock';
 import path from 'path';
 import os from 'os';
@@ -9,9 +10,9 @@ const pageUrl = `${host}/index`;
 const basename = 'my-site-index';
 const htmlFileName = [basename, '.html'].join('');
 const resourcesFolderName = [basename, '_files'].join('');
-const cssFileName = 'assets-css-main.css';
-const jsFileName = 'assets-js-main.js';
-const img1FileName = 'assets-images-cat1.jpg';
+const cssFileName = 'my-site-assets-css-main.css';
+const jsFileName = 'my-site-assets-js-main.js';
+const img1FileName = 'my-site-assets-images-cat1.jpg';
 
 const makeFixturePath = (...args) => path.resolve(__dirname, '__fixtures__', ...args);
 
@@ -55,7 +56,7 @@ describe('Page loader', () => {
     const createdFilePath = path.resolve(outputDir, htmlFileName);
     const createdFileContent = await pfs.readFile(createdFilePath, 'utf-8');
 
-    expect(createdFileContent).toEqual(expectedFileContent);
+    expect(createdFileContent).toEqual(cheerio.load(expectedFileContent).html());
   });
 
   test('should make resources folder', async () => {
@@ -70,7 +71,6 @@ describe('Page loader', () => {
     const cssResourcePath = path.resolve(outputDir, resourcesFolderName, cssFileName);
     const createdFileContent = await pfs.readFile(cssResourcePath, 'utf-8');
 
-    pfs.readFile(expectedCssFilePath, 'utf-8');
     expect(createdFileContent).toEqual(expectedFileContent);
   });
 

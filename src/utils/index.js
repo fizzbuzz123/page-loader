@@ -1,7 +1,8 @@
 import path from 'path';
+import cheerio from 'cheerio';
+import { resolve as resolveUrl } from 'url';
 
 export { default as getErrorMessage } from './get-error-message';
-export { default as extractResourceUrls } from './extract-resource-urls';
 
 const removeFirstSlash = (str) => str.replace(/^\//, '');
 const removeLastSlash = (str) => str.replace(/\/(,|$)/, '');
@@ -23,11 +24,9 @@ export const makeBaseName = (pageUrl) => {
 };
 
 export const makeResourceName = (resourceUrl) => {
-  let url = resourceUrl;
-  if (resourceUrl.startsWith('http')) {
-    const { hostname, pathname } = new URL(resourceUrl);
-    url = [hostname, pathname].join('');
-  }
+  const { hostname, pathname } = new URL(resourceUrl);
+  const url = [hostname, pathname].join('');
+
   const extname = path.extname(url);
   return url
     |> removeFirstSlash
@@ -36,12 +35,43 @@ export const makeResourceName = (resourceUrl) => {
     |> addExt(extname);
 };
 
-export const replaceResourceUrls = (htmlText, resourcesFolderName, resourceUrls) => {
-  let result = htmlText;
-  resourceUrls.forEach((resourceUrl) => {
-    const resourceName = makeResourceName(resourceUrl);
-    const resourcePath = `./${resourcesFolderName}/${resourceName}`;
-    result = result.replace(new RegExp(resourceUrl, 'g'), resourcePath);
-  });
-  return result;
+export const getResourceUrlsAndReplacedHtmlText = (
+  htmlText, pageUrl, resourcesFolderName, resourcesFolderPath,
+) => {
+  const mapping = {
+    img: 'src',
+    link: 'href',
+    script: 'src',
+  };
+
+  const $ = cheerio.load(htmlText);
+  const tags = Object.keys(mapping);
+  const selector = tags.join(',');
+  const urls = [];
+
+  $(selector)
+    .toArray()
+    .filter((el) => {
+      const url = $(el).attr(mapping[el.name]);
+      return Boolean(url);
+    })
+    .filter((el) => {
+      const url = $(el).attr(mapping[el.name]);
+      return !url.startsWith(':data');
+    })
+    .forEach((el) => {
+      const attrName = mapping[el.name];
+      const url = $(el).attr(attrName);
+      const fullUrl = resolveUrl(pageUrl, url);
+
+      const resourceName = makeResourceName(fullUrl);
+      const localResourcePath = `./${resourcesFolderName}/${resourceName}`;
+      const absoluteResourcePath = path.resolve(resourcesFolderPath, resourceName);
+
+      $(el).attr(attrName, localResourcePath);
+      urls.push({ url: fullUrl, dest: absoluteResourcePath });
+    });
+
+  const replacedHtmlText = $.html();
+  return [urls, replacedHtmlText];
 };
